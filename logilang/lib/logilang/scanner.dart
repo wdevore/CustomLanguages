@@ -207,16 +207,4 @@ class Scanner {
     if (current + 1 >= source.length) return null;
     return source.substring(current + 1, current + 2);
   }
-
-  bool isWhiteSpace(String c) {
-    switch (c) {
-      case ' ':
-      case '\r':
-      case '\t':
-      case '\n':
-        return true;
-      default:
-        return false;
-    }
-  }
 }
