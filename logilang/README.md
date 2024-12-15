@@ -1,11 +1,6 @@
-# petiteparser
+# logilang
 
 A new Flutter project.
-
-# Created by
-```sh
-flutter create --platforms web petiteparser
-```
 
 ## Getting Started
 
