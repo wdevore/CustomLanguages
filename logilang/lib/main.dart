@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+
 import 'logilang/logi_lang.dart';
 
-void main() {
+void main(List<String> args) {
   LogiLang logi = LogiLang();
   logi.run("2 < 3 and 5 > 4");
   debugPrint('---------------------------------');
