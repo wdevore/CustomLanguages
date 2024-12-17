@@ -1,6 +1,9 @@
 import 'package:flutter/foundation.dart';
 import '/logilang/scanner.dart';
 import '/logilang/token.dart';
+import 'ast_printer.dart';
+import 'expr.dart';
+import 'parser.dart';
 
 /*
 Without considering precedence.
@@ -32,6 +35,18 @@ unary      → ( "!" | "-" ) unary
 primary    → NUMBER | STRING | "true" | "false" | "nil"
            | "(" expression ")" ;
 
+===============================
+expression → logical ;
+logical    → equality ( ( "||" | "&&" ) equality )* ;
+equality   → comparison ( ( "!=" | "==" ) comparison )* ;
+comparison → term ( ( ">" | ">=" | "<" | "<=" ) term )* ;
+term       → factor ( ( "-" | "+" ) factor )* ;
+factor     → unary ( ( "/" | "*" ) unary )* ;
+unary      → ( "!" | "-" ) unary
+           | primary ;
+primary    → NUMBER | STRING | "true" | "false" | "nil"
+           | "(" expression ")" ;
+
 */
 class LogiLang {
   void run(String source, {int debugLevel = 0}) {
@@ -46,5 +61,15 @@ class LogiLang {
         }
       }
     }
+
+    Parser parser = Parser(tokens);
+
+    Expr? expression = parser.parse();
+
+    if (expression == null) return;
+
+    AstPrinter printer = AstPrinter();
+    String output = printer.print(expression);
+    print(output);
   }
 }

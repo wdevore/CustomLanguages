@@ -5,6 +5,7 @@ enum TokenType {
   minus,
   plus,
   slash,
+  star,
 
   // One or two character tokens
   bang,
@@ -19,13 +20,19 @@ enum TokenType {
   // Literals
   identifier,
   number,
+  string,
 
-  // keywords
+  // Keywords
   and,
+  bitAnd,
   or,
+  bitOr,
   bFalse,
   bTrue,
   xor,
+
+  // Statements
+  semiColon,
 
   nil,
   eof,

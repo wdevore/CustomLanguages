@@ -7,8 +7,8 @@ class Scanner {
   final List<Token> tokens = [];
 
   final Map<String, TokenType> keywords = {
-    'and': TokenType.and,
-    'or': TokenType.or,
+    // 'and': TokenType.and,
+    // 'or': TokenType.or,
     'nil': TokenType.nil,
     'false': TokenType.bFalse,
     'true': TokenType.bTrue,
@@ -73,6 +73,12 @@ class Scanner {
         break;
       case '>':
         addToken(match('=') ? TokenType.greaterEqual : TokenType.greater);
+        break;
+      case '&':
+        addToken(match('&') ? TokenType.and : TokenType.bitAnd);
+        break;
+      case '|':
+        addToken(match('|') ? TokenType.or : TokenType.bitOr);
         break;
       case '/':
         // '/' needs additional handling

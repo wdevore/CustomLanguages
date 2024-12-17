@@ -4,11 +4,11 @@ import 'logilang/logi_lang.dart';
 
 void main(List<String> args) {
   LogiLang logi = LogiLang();
-  logi.run("2 < 3 and 5 > 4");
+  logi.run("2 < 3 && 5 > 4");
   debugPrint('---------------------------------');
-  logi.run("2 <= 3 and 5 > 4");
+  logi.run("2 <= 3 && 5 > 4");
   debugPrint('---------------------------------');
-  logi.run("3 == false and 9 > 9");
+  logi.run("3 == false && 9 > 9");
 
   debugPrint('done');
   runApp(const MyApp());
