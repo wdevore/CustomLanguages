@@ -12,23 +12,20 @@ class Parser {
 
   Expr? parse() {
     try {
-      // Expr x1 = expression();
-      // Expr x2 = expression();
       return expression();
     } on ParseError catch (error) {
       return null;
     }
   }
 
-  // The first rule, expression , simply expands to the equality rule,
+  // The first rule, expression , simply expands to the logical rule,
   // so that’s straightforward.
   Expr expression() {
     return logical();
   }
 
   // ---------------------------------------------------------
-  // BNF: expression → logical ;
-  //      logical    → equality ( ( "||" | "&&" ) equality )* ;
+  // BNF: logical    → equality ( ( "||" | "&&" ) equality )* ;
   // ---------------------------------------------------------
   Expr logical() {
     Expr expr = equality();
@@ -42,8 +39,7 @@ class Parser {
   }
 
   // ---------------------------------------------------------
-  // BNF: expression → equality ;
-  //      equality   → comparison ( ( "!=" | "==" ) comparison )* ;
+  // BNF: equality   → comparison ( ( "!=" | "==" ) comparison )* ;
   // ---------------------------------------------------------
   // In that way, this method matches an equality operator or anything of
   // higher precedence.

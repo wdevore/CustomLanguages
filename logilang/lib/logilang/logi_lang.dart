@@ -35,7 +35,7 @@ unary      → ( "!" | "-" ) unary
 primary    → NUMBER | STRING | "true" | "false" | "nil"
            | "(" expression ")" ;
 
-===============================
+=============== With logicals ================
 expression → logical ;
 logical    → equality ( ( "||" | "&&" ) equality )* ;
 equality   → comparison ( ( "!=" | "==" ) comparison )* ;
