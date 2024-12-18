@@ -10,6 +10,15 @@ class Parser {
 
   Parser(this.tokens);
 
+  factory Parser.create(List<Token> tokens) {
+    Parser p = Parser(tokens);
+    return p;
+  }
+
+  void reset() {
+    current = 0;
+  }
+
   Expr? parse() {
     try {
       return expression();
@@ -225,13 +234,4 @@ class Parser {
       advance();
     }
   }
-}
-
-/// When we want to synchronize, we *throw* the ParseError object.
-/// Higher up in the method for the grammar rule we are synchronizing to,
-/// we’ll catch it.
-/// We synchronize on *statement* boundaries.
-///
-class ParseError implements Exception {
-  String error() => 'Parse exception';
 }

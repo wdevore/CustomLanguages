@@ -3,6 +3,7 @@ import '/logilang/scanner.dart';
 import '/logilang/token.dart';
 import 'ast_printer.dart';
 import 'expr.dart';
+import 'interpreter.dart';
 import 'parser.dart';
 
 /*
@@ -62,7 +63,7 @@ class LogiLang {
       }
     }
 
-    Parser parser = Parser(tokens);
+    Parser parser = Parser.create(tokens);
 
     Expr? expression = parser.parse();
 
@@ -71,5 +72,19 @@ class LogiLang {
     AstPrinter printer = AstPrinter();
     String output = printer.print(expression);
     print(output);
+  }
+
+  void interpret(String source) {
+    Scanner scanner = Scanner.create(source);
+    List<Token> tokens = scanner.scanTokens();
+
+    Parser parser = Parser.create(tokens);
+
+    Expr? expression = parser.parse();
+
+    if (expression == null) return;
+
+    Interpreter interpreter = Interpreter();
+    interpreter.interpret(expression);
   }
 }

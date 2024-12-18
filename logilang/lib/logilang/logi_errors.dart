@@ -6,6 +6,8 @@ import 'token_type.dart';
 class LogiErrors {
   static bool hadError = false;
 
+  static bool hadRuntimeError = false;
+
   static void error(int line, String message) {
     report(line, "", message);
   }
@@ -23,5 +25,35 @@ class LogiErrors {
     } else {
       report(token.line, ' at (${token.lexeme})', message);
     }
+  }
+
+  static void runtimeError(RuntimeError error) {
+    if (kDebugMode) {
+      print('[line ${error.token.line}] => ${error.message}');
+    }
+    hadRuntimeError = true;
+  }
+}
+
+/// When we want to synchronize, we *throw* the ParseError object.
+/// Higher up in the method for the grammar rule we are synchronizing to,
+/// we’ll catch it.
+/// We synchronize on *statement* boundaries.
+///
+class ParseError implements Exception {
+  String error() => 'Parse exception';
+}
+
+class RuntimeError implements Exception {
+  final Token token;
+
+  /// A message describing the format error.
+  final String message;
+
+  RuntimeError(this.token, this.message);
+
+  factory RuntimeError.create(Token token, String message) {
+    RuntimeError re = RuntimeError(token, message);
+    return re;
   }
 }

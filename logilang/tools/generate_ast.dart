@@ -117,14 +117,6 @@ class GenerateAst {
     sink.writeln('    return visitor.visit$className$baseName(this);');
     sink.writeln("  }");
 
-    // Store parameters in fields.
-    // for (String field in fields) {
-    //   String name = field.split(" ")[1];
-    //   sink.writeln('    this.$name = $name;');
-    // }
-
-    // sink.writeln('  }');
-
     sink.writeln('}');
   }
 }
