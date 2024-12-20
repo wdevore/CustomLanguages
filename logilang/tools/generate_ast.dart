@@ -12,25 +12,40 @@ void main(List<String> args) {
 
   GenerateAst ast = GenerateAst();
 
-  ast.defineAst(outputDir, "Expr");
+  ast.defineAst(outputDir, "Expr", [
+    "Assign   : Token name, Expr value",
+    "Binary   : Expr left, Token operator, Expr right",
+    "Grouping : Expr expression",
+    "Literal  : Object value",
+    "Unary    : Token operator, Expr right",
+    "Variable : Token name",
+  ]);
+
+  ast.defineAst(outputDir, "Stmt", [
+    "Expression : Expr expression",
+    "Print      : Expr expression",
+    "Var        : Token name, Expr? initializer",
+  ]);
 }
 
 class GenerateAst {
-  List<String> types = [
-    "Binary: Expr left, Token operator, Expr right",
-    "Grouping : Expr expression",
-    "Literal: Object value",
-    "Unary: Token operator, Expr right",
-  ];
+  late List<String> types;
 
-  void defineAst(String outputDir, String baseName) {
-    var filePath = p.join(Directory.current.path, outputDir);
+  void defineAst(String outputDir, String baseName, List<String> types) {
+    this.types = types;
+
+    var filePath = p.join(
+        Directory.current.path, '$outputDir/${baseName.toLowerCase()}.dart');
 
     final File file = File(filePath);
 
     IOSink sink = file.openWrite();
 
     sink.writeln("import 'token.dart';");
+
+    if (baseName == 'Stmt') {
+      sink.writeln("import 'expr.dart';");
+    }
     sink.writeln();
 
     sink.writeln("""
@@ -44,7 +59,7 @@ class GenerateAst {
 
     sink.writeln('abstract class $baseName {');
     // The base accept() method.
-    sink.writeln("  R accept<R>(Visitor<R> visitor);");
+    sink.writeln('  R accept<R>(${baseName}Visitor<R> visitor);');
 
     sink.writeln('}');
 
@@ -59,7 +74,7 @@ class GenerateAst {
   }
 
   void defineVisitor(IOSink sink, String baseName) {
-    sink.writeln("abstract class Visitor<R> {");
+    sink.writeln("abstract class ${baseName}Visitor<R> {");
 
     for (String type in types) {
       String typeName = type.split(":")[0].trim();
@@ -113,74 +128,10 @@ class GenerateAst {
     // -------------------------------------------------------
     sink.writeln();
     sink.writeln("  @override");
-    sink.writeln("  R accept<R>(Visitor<R> visitor) {");
+    sink.writeln("  R accept<R>(${baseName}Visitor<R> visitor) {");
     sink.writeln('    return visitor.visit$className$baseName(this);');
     sink.writeln("  }");
 
     sink.writeln('}');
   }
 }
-
-void _testAstPrinter() {}
-
-// ---------------------------------------------------------
-// An example of what is generated
-/*
-abstract class Visitor<R> {
-  R visitBinaryExpr(Binary expr);
-  R visitGroupingExpr(Grouping expr);
-  R visitLiteralExpr(Literal expr);
-  R visitUnaryExpr(Unary expr);
-}
-
-abstract class Expr {
-  R accept<R>(Visitor<R> visitor);
-}
-
-class Binary extends Expr {
-  final Expr left;
-  final Token operator;
-  final Expr right;
-
-  Binary( this.left, this.operator, this.right);
-
-  @override
-  R accept<R>(Visitor<R> visitor) {
-    return visitor.visitBinaryExpr(this);
-  }
-}
-
-class Grouping extends Expr {
-  final Expr expression;
-
-  Grouping( this.expression);
-
-  @override
-  R accept<R>(Visitor<R> visitor) {
-    return visitor.visitGroupingExpr(this);
-  }
-}
-
-class Literal extends Expr {
-  final Object value;
-
-  Literal( this.value);
-
-  @override
-  R accept<R>(Visitor<R> visitor) {
-    return visitor.visitLiteralExpr(this);
-  }
-}
-
-class Unary extends Expr {
-  final Token operator;
-  final Expr right;
-
-  Unary( this.operator, this.right);
-
-  @override
-  R accept<R>(Visitor<R> visitor) {
-    return visitor.visitUnaryExpr(this);
-  }
-}
-*/

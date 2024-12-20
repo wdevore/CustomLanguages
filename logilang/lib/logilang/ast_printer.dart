@@ -1,6 +1,6 @@
 import 'expr.dart';
 
-class AstPrinter implements Visitor<String> {
+class AstPrinter implements ExprVisitor<String> {
   String print(Expr expr) {
     return expr.accept(this);
   }
@@ -37,5 +37,17 @@ class AstPrinter implements Visitor<String> {
     buffer.write(")");
 
     return buffer.toString();
+  }
+
+  @override
+  String visitVariableExpr(Variable expr) {
+    // TODO: implement visitVariableExpr
+    throw UnimplementedError();
+  }
+
+  @override
+  String visitAssignExpr(Assign expr) {
+    // TODO: implement visitAssignExpr
+    throw UnimplementedError();
   }
 }

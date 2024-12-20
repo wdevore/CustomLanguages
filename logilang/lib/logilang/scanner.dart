@@ -7,17 +7,19 @@ class Scanner {
   final List<Token> tokens = [];
 
   final Map<String, TokenType> keywords = {
-    // 'and': TokenType.and,
-    // 'or': TokenType.or,
+    // --- Primitives ----
     'nil': TokenType.nil,
     'false': TokenType.bFalse,
     'true': TokenType.bTrue,
+    // --- Statements ----
+    'print': TokenType.print,
+    'var': TokenType.sVar,
   };
 
   // The start and current fields are offsets that index into the string.
   int start = 0;
   int current = 0;
-  // The line field tracks what source line current is on
+  // The line field tracks what source line *current* is on
   int line = 1;
 
   Scanner();
@@ -65,6 +67,9 @@ class Scanner {
       case '+':
         addToken(TokenType.plus);
         break;
+      case ';':
+        addToken(TokenType.semiColon);
+        break;
       case '=':
         addToken(match('=') ? TokenType.equalEqual : TokenType.equal);
         break;
@@ -105,6 +110,9 @@ class Scanner {
       case '\n':
         line++;
         break;
+      case '"':
+        _string();
+        break;
       default:
         // --------------- Number literals --------------------------
         // It’s kind of tedious to add cases for every decimal digit, so we’ll
@@ -120,7 +128,7 @@ class Scanner {
           // reserved word comes from.
           identifier();
         } else {
-          LogiErrors.error(line, "Unexpected character.");
+          LogiErrors.error(line, 'Unexpected character: "$c"');
         }
         break;
     }
@@ -147,7 +155,7 @@ class Scanner {
 
   /// It’s like a conditional advance.
   /// Using *match* , we recognize these lexemes in two stages. When we reach,
-  /// forexample, **!** , we jump to its switch case. That means we know the
+  /// for example, **!** , we jump to its switch case. That means we know the
   /// lexeme starts with **!** . Then we look at the next character to
   /// determine if we’re on a **!=** or merely a **!** .
   bool match(String expected) {
@@ -196,6 +204,25 @@ class Scanner {
 
     addTokenLiteral(
         TokenType.number, double.parse(source.substring(start, current)));
+  }
+
+  void _string() {
+    while (peek() != '"' && !isAtEnd) {
+      if (peek() == '\n') line++;
+      advance();
+    }
+
+    if (isAtEnd) {
+      LogiErrors.error(line, "Unterminated string.");
+      return;
+    }
+
+    // The closing quote.
+    advance();
+
+    // Trim the surrounding quotes.
+    String value = source.substring(start + 1, current - 1);
+    addTokenLiteral(TokenType.string, value);
   }
 
   bool isDigit(String? c) {

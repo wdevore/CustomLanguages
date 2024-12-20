@@ -5,10 +5,18 @@ import 'logilang/logi_lang.dart';
 void main(List<String> args) {
   LogiLang logi = LogiLang();
 
-  logi.interpret('2 < 3 && 5 > 4');
-  debugPrint('---------------------------------');
-  logi.interpret('2 < 3 && 9');
+  logi.interpret("""
+print 2 < 3 && 5 < 4;
+""");
 
+  logi.interpret("""
+var a = 1;
+print a;
+""");
+
+  // logi.interpret('2 < 3 && 5 > 4');
+  // debugPrint('---------------------------------');
+  // logi.interpret('2 < 3 && 9');
   // logi.run("2 < 3 && 5 > 4");
   // debugPrint('---------------------------------');
   // logi.run("2 <= 3 && 5 > 4");

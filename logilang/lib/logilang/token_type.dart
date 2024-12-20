@@ -33,6 +33,8 @@ enum TokenType {
 
   // Statements
   semiColon,
+  print,
+  sVar, // var
 
   nil,
   eof,

@@ -1,24 +1,34 @@
 import 'package:flutter/foundation.dart';
-import 'package:logilang/logilang/token.dart';
 
+import 'environment.dart';
+import 'stmt.dart';
+import 'token.dart';
 import 'expr.dart';
 import 'logi_errors.dart';
 import 'token_type.dart';
 
 // Our interpreter is doing a post-order traversal—each node evaluates its
 // children before doing its own work.
-class Interpreter implements Visitor<Object> {
-  void interpret(Expr expression) {
+class Interpreter implements ExprVisitor<Object>, StmtVisitor<void> {
+  Environment environment = Environment();
+
+  void interpret(List<Stmt> statements) {
     try {
-      Object value = evaluate(expression);
-      if (kDebugMode) {
-        print(stringify(value));
+      for (Stmt statement in statements) {
+        execute(statement);
       }
     } on RuntimeError catch (error) {
       LogiErrors.runtimeError(error);
     }
   }
 
+  void execute(Stmt stmt) {
+    stmt.accept(this);
+  }
+
+  // -------------------------------------------------------------
+  // -------- Expression visitors
+  // -------------------------------------------------------------
   @override
   Object visitLiteralExpr(Literal expr) {
     // The parser took that value and stuck it in the literal tree node, so to
@@ -105,6 +115,25 @@ class Interpreter implements Visitor<Object> {
     }
   }
 
+  // -------------------------------------------------------------
+  // -------- Statement visitors
+  // -------------------------------------------------------------
+  @override
+  void visitExpressionStmt(Expression stmt) {
+    // Appropriately enough, we discard the value returned by evaluate() by
+    // placing that call inside an expression statement.
+    evaluate(stmt.expression);
+  }
+
+  @override
+  void visitPrintStmt(Print stmt) {
+    Object value = evaluate(stmt.expression);
+    debugPrint(stringify(value));
+  }
+
+  // -------------------------------------------------------------
+  // -------- Helpers
+  // -------------------------------------------------------------
   Object evaluate(Expr expr) {
     return expr.accept(this);
   }
@@ -144,5 +173,31 @@ class Interpreter implements Visitor<Object> {
     }
 
     return object.toString();
+  }
+
+  // ----------------------------------------------------
+  // --- Environment State
+  // ----------------------------------------------------
+  @override
+  void visitVarStmt(Var stmt) {
+    Object? value;
+    if (stmt.initializer != null) {
+      value = evaluate(stmt.initializer!);
+    }
+
+    environment.define(stmt.name.lexeme, value);
+  }
+
+  @override
+  Object visitVariableExpr(Variable expr) {
+    Object? v = environment.access(expr.name);
+    return v ?? Literal(TokenType.nil); // TODO maybe return Literal('nil')??
+  }
+
+  @override
+  Object visitAssignExpr(Assign expr) {
+    Object value = evaluate(expr.value);
+    environment.assign(expr.name, value);
+    return value;
   }
 }
