@@ -20,13 +20,13 @@ void main(List<String> args) {
 print a < 3 && (b < 1 || a == 1);
 """); // output: true
 
-  print('--------------------------');
+  debugPrint('--------------------------');
   logi.interpret("""
 print c < 1 && badge < 10;
 print c < 5 && badge < 10;
 """); // output: false,true
 
-  print('--------------------------');
+  debugPrint('--------------------------');
   logi.interpret("""
 print c < -5 && badge < 10;
 print badge;
@@ -40,10 +40,18 @@ var fooled = c <= 3 && badge > 5;
 print c <= 3 && badge > c;
 """); // output: true
 
+  // You can directly run an expression as follows:
+  bool result = logi.interpretExpr("""
+c <= 3 && badge > a;
+"""); // output: result = true
+  debugPrint('result: $result');
+
+  // You print a variable via the language
   logi.interpret("""
 print fooled;
 """); // output: true
 
+  // Or you can access it:
   Object? fooled = logi.access('fooled');
   debugPrint('fooled is: $fooled'); // output: true
 

@@ -12,8 +12,9 @@ class LogiLang {
   LogiLang();
 
   factory LogiLang.create() {
-    LogiLang ll = LogiLang();
-    ll._env = Environment();
+    LogiLang ll = LogiLang()
+      .._env = Environment()
+      ..clear();
     ll._interpreter = Interpreter.create(ll._env);
     return ll;
   }
@@ -21,6 +22,7 @@ class LogiLang {
   /// Deletes global variables.
   void clear() {
     _env.clear();
+    _env.define('result', false);
   }
 
   /// Manifest variables instead of using 'var' keyword.
@@ -44,5 +46,20 @@ class LogiLang {
     if (statements.isEmpty) return;
 
     _interpreter.interpret(statements);
+  }
+
+  bool interpretExpr(String expression) {
+    expression = 'result = $expression';
+    interpret(expression);
+    Object? result = access('result');
+    if (result is bool) {
+      return result;
+    }
+
+    if (result == null) {
+      return false;
+    }
+
+    return false;
   }
 }

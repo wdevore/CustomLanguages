@@ -10,6 +10,9 @@ It has 5 reserved keywords:
 - '**var**'
 - '**print**'
 
+and 1 reserved variable:
+- '**result**'
+
 Usage:
 First you construct the language:
 ```dart
