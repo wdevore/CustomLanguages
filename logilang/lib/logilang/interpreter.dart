@@ -10,7 +10,14 @@ import 'token_type.dart';
 // Our interpreter is doing a post-order traversal—each node evaluates its
 // children before doing its own work.
 class Interpreter implements ExprVisitor<Object>, StmtVisitor<void> {
-  Environment environment = Environment();
+  late Environment environment;
+
+  Interpreter();
+
+  factory Interpreter.create(Environment environmnt) {
+    Interpreter itp = Interpreter()..environment = environmnt;
+    return itp;
+  }
 
   void interpret(List<Stmt> statements) {
     try {

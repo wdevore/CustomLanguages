@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:logilang/logilang/environment.dart';
 
 import 'scanner.dart';
 import 'token.dart';
@@ -7,6 +8,8 @@ import 'parser.dart';
 import 'stmt.dart';
 
 class LogiLang {
+  Environment env = Environment();
+
   void run(String source, {int debugLevel = 0}) {
     Scanner scanner = Scanner.create(source);
     List<Token> tokens = scanner.scanTokens();
@@ -31,6 +34,10 @@ class LogiLang {
     // print(output);
   }
 
+  void define(String name, Object? value) {
+    env.define(name, value);
+  }
+
   void interpret(String source) {
     Scanner scanner = Scanner.create(source);
     List<Token> tokens = scanner.scanTokens();
@@ -41,7 +48,7 @@ class LogiLang {
 
     if (statements.isEmpty) return;
 
-    Interpreter interpreter = Interpreter();
+    Interpreter interpreter = Interpreter.create(env);
     interpreter.interpret(statements);
   }
 

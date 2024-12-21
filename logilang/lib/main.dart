@@ -5,13 +5,49 @@ import 'logilang/logi_lang.dart';
 void main(List<String> args) {
   LogiLang logi = LogiLang();
 
-  logi.interpret("""
-print 2 < 3 && 5 < 4;
-""");
+  // Magically manifest variables into existance ;-)
+  // The four lines below are directly equivalent to:
+  // var a = 1;
+  // var b = 2;
+  // var c = 3;
+  // var badge = 9;
+  logi.define('a', 1);
+  logi.define('b', 2);
+  logi.define('c', 3);
+  logi.define('badge', 9);
 
   logi.interpret("""
-var a = 1;
-print a;
+print a < 3 && b < 4;
+""");
+
+  print('--------------------------');
+  logi.interpret("""
+print c < 1 && badge < 10;
+""");
+
+  print('--------------------------');
+  logi.interpret("""
+print c < 5 && badge < 10;
+""");
+
+  print('--------------------------');
+  logi.interpret("""
+print c < -5 && badge < 10;
+""");
+
+  print('--------------------------');
+  logi.interpret("""
+print badge;
+""");
+
+  print('var fooled: --------------------------');
+  logi.interpret("""
+var fooled = c <= 3 && badge > 5;
+""");
+
+  print('fooled: --------------------------');
+  logi.interpret("""
+print fooled;
 """);
 
   // logi.interpret('2 < 3 && 5 > 4');
