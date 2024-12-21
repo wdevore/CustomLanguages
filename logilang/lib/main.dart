@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'logilang/logi_lang.dart';
 
 void main(List<String> args) {
-  LogiLang logi = LogiLang();
+  LogiLang logi = LogiLang.create();
 
   // Magically manifest variables into existance ;-)
   // The four lines below are directly equivalent to:
