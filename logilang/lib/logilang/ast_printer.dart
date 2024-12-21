@@ -1,5 +1,6 @@
 import 'expr.dart';
 
+/// Simple tool for printing AST.
 class AstPrinter implements ExprVisitor<String> {
   String print(Expr expr) {
     return expr.accept(this);

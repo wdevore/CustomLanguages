@@ -1,3 +1,5 @@
+// Note: not all tokens are actually used. They are present just for
+// preservation.
 enum TokenType {
   // Single character tokens
   leftParen,
@@ -21,6 +23,7 @@ enum TokenType {
   identifier,
   number,
   string,
+  nil,
 
   // Keywords
   and,
@@ -36,6 +39,5 @@ enum TokenType {
   print,
   sVar, // var
 
-  nil,
   eof,
 }

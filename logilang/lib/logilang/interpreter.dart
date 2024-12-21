@@ -10,26 +10,26 @@ import 'token_type.dart';
 // Our interpreter is doing a post-order traversal—each node evaluates its
 // children before doing its own work.
 class Interpreter implements ExprVisitor<Object>, StmtVisitor<void> {
-  late Environment environment;
+  late Environment _environment;
 
   Interpreter();
 
   factory Interpreter.create(Environment environmnt) {
-    Interpreter itp = Interpreter()..environment = environmnt;
+    Interpreter itp = Interpreter().._environment = environmnt;
     return itp;
   }
 
   void interpret(List<Stmt> statements) {
     try {
       for (Stmt statement in statements) {
-        execute(statement);
+        _execute(statement);
       }
     } on RuntimeError catch (error) {
       LogiErrors.runtimeError(error);
     }
   }
 
-  void execute(Stmt stmt) {
+  void _execute(Stmt stmt) {
     stmt.accept(this);
   }
 
@@ -47,18 +47,18 @@ class Interpreter implements ExprVisitor<Object>, StmtVisitor<void> {
   Object visitGroupingExpr(Grouping expr) {
     // To evaluate the grouping expression itself, we recursively evaluate that
     // subexpression and return it.
-    return evaluate(expr.expression);
+    return _evaluate(expr.expression);
   }
 
   @override
   Object visitUnaryExpr(Unary expr) {
-    Object right = evaluate(expr.right);
+    Object right = _evaluate(expr.right);
 
     switch (expr.operator.type) {
       case TokenType.bang:
-        return !isTruthy(right);
+        return !_isTruthy(right);
       case TokenType.minus:
-        checkNumberOperand(expr.operator, right);
+        _checkNumberOperand(expr.operator, right);
         return -(right as double);
       default:
         return Null;
@@ -67,30 +67,30 @@ class Interpreter implements ExprVisitor<Object>, StmtVisitor<void> {
 
   @override
   Object visitBinaryExpr(Binary expr) {
-    Object left = evaluate(expr.left);
-    Object right = evaluate(expr.right);
+    Object left = _evaluate(expr.left);
+    Object right = _evaluate(expr.right);
 
     switch (expr.operator.type) {
       // ----------- Comparisons ----------------------
       case TokenType.greater:
-        checkNumberOperands(expr.operator, left, right);
+        _checkNumberOperands(expr.operator, left, right);
         return (left as double) > (right as double);
       case TokenType.greaterEqual:
-        checkNumberOperands(expr.operator, left, right);
+        _checkNumberOperands(expr.operator, left, right);
         return (left as double) >= (right as double);
       case TokenType.less:
-        checkNumberOperands(expr.operator, left, right);
+        _checkNumberOperands(expr.operator, left, right);
         return (left as double) < (right as double);
       case TokenType.lessEqual:
-        checkNumberOperands(expr.operator, left, right);
+        _checkNumberOperands(expr.operator, left, right);
         return (left as double) <= (right as double);
       case TokenType.bangEqual:
-        return !isEqual(left, right);
-      case TokenType.equal:
-        return isEqual(left, right);
+        return !_isEqual(left, right);
+      case TokenType.equalEqual:
+        return _isEqual(left, right);
       // ----------- Terms ----------------------
       case TokenType.minus:
-        checkNumberOperands(expr.operator, left, right);
+        _checkNumberOperands(expr.operator, left, right);
         return (left as double) - (right as double);
       case TokenType.plus:
         if (left is double && right is double) {
@@ -112,10 +112,10 @@ class Interpreter implements ExprVisitor<Object>, StmtVisitor<void> {
         }
         throw RuntimeError(expr.operator, "Operands must be two booleans.");
       case TokenType.slash:
-        checkNumberOperands(expr.operator, left, right);
+        _checkNumberOperands(expr.operator, left, right);
         return (left as double) / (right as double);
       case TokenType.star:
-        checkNumberOperands(expr.operator, left, right);
+        _checkNumberOperands(expr.operator, left, right);
         return (left as double) * (right as double);
       default:
         return Null;
@@ -129,46 +129,72 @@ class Interpreter implements ExprVisitor<Object>, StmtVisitor<void> {
   void visitExpressionStmt(Expression stmt) {
     // Appropriately enough, we discard the value returned by evaluate() by
     // placing that call inside an expression statement.
-    evaluate(stmt.expression);
+    _evaluate(stmt.expression);
   }
 
   @override
   void visitPrintStmt(Print stmt) {
-    Object value = evaluate(stmt.expression);
-    debugPrint(stringify(value));
+    Object value = _evaluate(stmt.expression);
+    debugPrint(_stringify(value));
+  }
+
+  // ----------------------------------------------------
+  // --- Environment State
+  // ----------------------------------------------------
+  @override
+  void visitVarStmt(Var stmt) {
+    Object? value;
+    if (stmt.initializer != null) {
+      value = _evaluate(stmt.initializer!);
+    }
+
+    _environment.define(stmt.name.lexeme, value);
+  }
+
+  @override
+  Object visitVariableExpr(Variable expr) {
+    Object? v = _environment.access(expr.name);
+    return v ?? Literal(TokenType.nil); // TODO maybe return Literal('nil')??
+  }
+
+  @override
+  Object visitAssignExpr(Assign expr) {
+    Object value = _evaluate(expr.value);
+    _environment.assign(expr.name, value);
+    return value;
   }
 
   // -------------------------------------------------------------
   // -------- Helpers
   // -------------------------------------------------------------
-  Object evaluate(Expr expr) {
+  Object _evaluate(Expr expr) {
     return expr.accept(this);
   }
 
   /// *false* and *nil* are falsey and everything else is truthy.
-  bool isTruthy(Object? object) {
+  bool _isTruthy(Object? object) {
     if (object == null) return false;
     if (object is bool) return object;
     return true;
   }
 
-  bool isEqual(Object? a, Object? b) {
+  bool _isEqual(Object? a, Object? b) {
     // if (a == null && b == null) return true;
     // if (a == null) return false;
     return identical(a, b);
   }
 
-  void checkNumberOperand(Token operator, Object operand) {
+  void _checkNumberOperand(Token operator, Object operand) {
     if (operand is double) return;
     throw RuntimeError(operator, "Operand must be a number.");
   }
 
-  void checkNumberOperands(Token operator, Object left, Object right) {
+  void _checkNumberOperands(Token operator, Object left, Object right) {
     if (left is double && right is double) return;
     throw RuntimeError(operator, "Operands must be numbers.");
   }
 
-  String stringify(Object? object) {
+  String _stringify(Object? object) {
     if (object == null) return "nil";
 
     if (object is double) {
@@ -180,31 +206,5 @@ class Interpreter implements ExprVisitor<Object>, StmtVisitor<void> {
     }
 
     return object.toString();
-  }
-
-  // ----------------------------------------------------
-  // --- Environment State
-  // ----------------------------------------------------
-  @override
-  void visitVarStmt(Var stmt) {
-    Object? value;
-    if (stmt.initializer != null) {
-      value = evaluate(stmt.initializer!);
-    }
-
-    environment.define(stmt.name.lexeme, value);
-  }
-
-  @override
-  Object visitVariableExpr(Variable expr) {
-    Object? v = environment.access(expr.name);
-    return v ?? Literal(TokenType.nil); // TODO maybe return Literal('nil')??
-  }
-
-  @override
-  Object visitAssignExpr(Assign expr) {
-    Object value = evaluate(expr.value);
-    environment.assign(expr.name, value);
-    return value;
   }
 }

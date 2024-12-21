@@ -6,7 +6,7 @@ void main(List<String> args) {
   LogiLang logi = LogiLang.create();
 
   // Magically manifest variables into existance ;-)
-  // The four lines below are directly equivalent to:
+  // The four lines below are directly equivalent to calling define(...):
   // var a = 1;
   // var b = 2;
   // var c = 3;
@@ -17,47 +17,35 @@ void main(List<String> args) {
   logi.define('badge', 9);
 
   logi.interpret("""
-print a < 3 && b < 4;
-""");
+print a < 3 && (b < 1 || a == 1);
+"""); // output: true
 
   print('--------------------------');
   logi.interpret("""
 print c < 1 && badge < 10;
-""");
-
-  print('--------------------------');
-  logi.interpret("""
 print c < 5 && badge < 10;
-""");
+"""); // output: false,true
 
   print('--------------------------');
   logi.interpret("""
 print c < -5 && badge < 10;
-""");
-
-  print('--------------------------');
-  logi.interpret("""
 print badge;
-""");
+"""); // output: false, 9
 
-  print('var fooled: --------------------------');
   logi.interpret("""
 var fooled = c <= 3 && badge > 5;
-""");
+"""); // output: nothing
 
-  print('fooled: --------------------------');
+  logi.interpret("""
+print c <= 3 && badge > c;
+"""); // output: true
+
   logi.interpret("""
 print fooled;
-""");
+"""); // output: true
 
-  // logi.interpret('2 < 3 && 5 > 4');
-  // debugPrint('---------------------------------');
-  // logi.interpret('2 < 3 && 9');
-  // logi.run("2 < 3 && 5 > 4");
-  // debugPrint('---------------------------------');
-  // logi.run("2 <= 3 && 5 > 4");
-  // debugPrint('---------------------------------');
-  // logi.run("3 == false && 9 > 9");
+  Object? fooled = logi.access('fooled');
+  debugPrint('fooled is: $fooled'); // output: true
 
   debugPrint('done');
   runApp(const MyApp());

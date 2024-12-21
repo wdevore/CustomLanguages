@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
-import 'package:logilang/logilang/token.dart';
 
+import 'token.dart';
 import 'token_type.dart';
 
 class LogiErrors {

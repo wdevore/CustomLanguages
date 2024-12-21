@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 import 'expr.dart';
 import 'logi_errors.dart';
 import 'stmt.dart' as stmt;
@@ -90,8 +92,8 @@ class Parser {
 
   List<stmt.Stmt> parse() {
     List<stmt.Stmt> statements = <stmt.Stmt>[];
-    while (!isAtEnd) {
-      stmt.Stmt? decl = declaration();
+    while (!_isAtEnd) {
+      stmt.Stmt? decl = _declaration();
       if (decl != null) statements.add(decl);
     }
     return statements;
@@ -100,25 +102,28 @@ class Parser {
   // ---------------------------------------------------------
   // BNF: declaration  → varDecl | statement ;
   // ---------------------------------------------------------
-  stmt.Stmt? declaration() {
+  stmt.Stmt? _declaration() {
     try {
-      if (match([TokenType.sVar])) return varDeclaration();
-      return statement();
+      if (match([TokenType.sVar])) return _varDeclaration();
+      return _statement();
     } on ParseError catch (error) {
-      synchronize();
+      if (kDebugMode) {
+        print(error);
+      }
+      _synchronize();
       return null;
     }
   }
 
-  stmt.Stmt? varDeclaration() {
-    Token name = consume(TokenType.identifier, "Expect variable name.");
+  stmt.Stmt? _varDeclaration() {
+    Token name = _consume(TokenType.identifier, "Expect variable name.");
 
     Expr? initializer;
     if (match([TokenType.equal])) {
-      initializer = expression();
+      initializer = _expression();
     }
 
-    consume(TokenType.semiColon, "Expect ';' after variable declaration.");
+    _consume(TokenType.semiColon, "Expect ';' after variable declaration.");
 
     return stmt.Var(name, initializer);
   }
@@ -126,22 +131,22 @@ class Parser {
 // ---------------------------------------------------------
 // BNF: statement → exprStmt | printStmt ;
 // ---------------------------------------------------------
-  stmt.Stmt statement() {
+  stmt.Stmt _statement() {
     if (match([TokenType.print])) return printStatement();
     return expressionStatement();
   }
 
   stmt.Stmt printStatement() {
-    Expr value = expression();
-    consume(TokenType.semiColon, "Expect ';' after value.");
+    Expr value = _expression();
+    _consume(TokenType.semiColon, "Expect ';' after value.");
     return stmt.Print(value);
   }
 
   /// Parse an expression followed by a semicolon. We wrap that Expr in a
   /// Stmt of the right type and return it.
   stmt.Stmt expressionStatement() {
-    Expr expr = expression();
-    consume(TokenType.semiColon, "Expect ';' after expression.");
+    Expr expr = _expression();
+    _consume(TokenType.semiColon, "Expect ';' after expression.");
     return stmt.Expression(expr);
   }
 
@@ -150,8 +155,8 @@ class Parser {
 // ---------------------------------------------------------
 // The first rule, expression , simply expands to the logical rule,
 // so that’s straightforward.
-  Expr expression() {
-    return assignment();
+  Expr _expression() {
+    return _assignment();
   }
 
   // ---------------------------------------------------------
@@ -162,19 +167,19 @@ class Parser {
   // expression. That’s why the Expr.Assign node has a Token for the left-hand side,
   // not an Expr. The problem is that the parser doesn’t know it’s parsing an l-value
   // until it hits the = . In a complex l-value, that may occur many tokens later:
-  Expr assignment() {
-    Expr expr = logical();
+  Expr _assignment() {
+    Expr expr = _logical();
 
     if (match([TokenType.equal])) {
-      Token equals = previous;
-      Expr value = assignment();
+      Token equals = _previous;
+      Expr value = _assignment();
 
       if (expr is Variable) {
         Token name = expr.name;
         return Assign(name, value);
       }
 
-      error(equals, "Invalid assignment target.");
+      _error(equals, "Invalid assignment target.");
     }
 
     return expr;
@@ -183,11 +188,11 @@ class Parser {
   // ---------------------------------------------------------
   // BNF: logical    → equality ( ( "||" | "&&" ) equality )* ;
   // ---------------------------------------------------------
-  Expr logical() {
-    Expr expr = equality();
+  Expr _logical() {
+    Expr expr = _equality();
     while (match([TokenType.and, TokenType.or])) {
-      Token operator = previous;
-      Expr right = equality();
+      Token operator = _previous;
+      Expr right = _equality();
       expr = Binary(expr, operator, right);
     }
 
@@ -199,10 +204,10 @@ class Parser {
 // ---------------------------------------------------------
 // In that way, this method matches an equality operator or anything of
 // higher precedence.
-  Expr equality() {
+  Expr _equality() {
     // The first comparison nonterminal in the body translates
     // to the first call to comparison() in the method.
-    Expr expr = comparison();
+    Expr expr = _comparison();
 
     // We need to know when to exit that loop. We can see that inside the rule,
     // we must first find either a != or == token. So, if we don’t see one of
@@ -213,8 +218,8 @@ class Parser {
       // expression.
       // We grab the matched operator token so we can track which kind of equality
       // expression we have.
-      Token operator = previous;
-      Expr right = comparison();
+      Token operator = _previous;
+      Expr right = _comparison();
       expr = Binary(expr, operator, right);
     }
 
@@ -224,8 +229,8 @@ class Parser {
 // ---------------------------------------------------------
 // BNF: comparison → term ( ( ">" | ">=" | "<" | "<=" ) term )* ;
 // ---------------------------------------------------------
-  Expr comparison() {
-    Expr expr = term();
+  Expr _comparison() {
+    Expr expr = _term();
 
     while (match([
       TokenType.greater,
@@ -233,8 +238,8 @@ class Parser {
       TokenType.less,
       TokenType.lessEqual
     ])) {
-      Token operator = previous;
-      Expr right = term();
+      Token operator = _previous;
+      Expr right = _term();
       expr = Binary(expr, operator, right);
     }
 
@@ -244,12 +249,12 @@ class Parser {
 // ---------------------------------------------------------
 // BNF: term       → factor ( ( "-" | "+" ) factor )* ;
 // ---------------------------------------------------------
-  Expr term() {
-    Expr expr = factor();
+  Expr _term() {
+    Expr expr = _factor();
 
     while (match([TokenType.minus, TokenType.plus])) {
-      Token operator = previous;
-      Expr right = factor();
+      Token operator = _previous;
+      Expr right = _factor();
       expr = Binary(expr, operator, right);
     }
 
@@ -259,11 +264,11 @@ class Parser {
 // ---------------------------------------------------------
 // BNF: factor     → unary ( ( "/" | "*" ) unary )* ;
 // ---------------------------------------------------------
-  Expr factor() {
-    Expr expr = unary();
+  Expr _factor() {
+    Expr expr = _unary();
     while (match([TokenType.slash, TokenType.star])) {
-      Token operator = previous;
-      Expr right = unary();
+      Token operator = _previous;
+      Expr right = _unary();
       expr = Binary(expr, operator, right);
     }
     return expr;
@@ -273,35 +278,35 @@ class Parser {
 // BNF: unary      → ( "!" | "-" ) unary
 //                 | primary ;
 // ---------------------------------------------------------
-  Expr unary() {
+  Expr _unary() {
     if (match([TokenType.bang, TokenType.minus])) {
-      Token operator = previous;
-      Expr right = unary();
+      Token operator = _previous;
+      Expr right = _unary();
       return Unary(operator, right);
     }
 
-    return primary();
+    return _primary();
   }
 
-  Expr primary() {
+  Expr _primary() {
     if (match([TokenType.bFalse])) return Literal(false);
     if (match([TokenType.bTrue])) return Literal(true);
     if (match([TokenType.nil])) return Literal(Null);
     if (match([TokenType.number, TokenType.string])) {
-      return Literal(previous.literal);
+      return Literal(_previous.literal);
     }
 
     if (match([TokenType.identifier])) {
-      return Variable(previous);
+      return Variable(_previous);
     }
 
     if (match([TokenType.leftParen])) {
-      Expr expr = expression();
-      consume(TokenType.rightParen, "Expect ')' after expression.");
+      Expr expr = _expression();
+      _consume(TokenType.rightParen, "Expect ')' after expression.");
       return Grouping(expr);
     }
 
-    throw error(peek, 'Expect expression');
+    throw _error(_peek, 'Expect expression');
   }
 
 // ---------------------------------------------------------
@@ -310,15 +315,15 @@ class Parser {
 // Returns the most recently consumed token.
 // The latter makes it easier to use match() and then access the just-matched
 // token.
-  Token get previous => tokens.elementAt(current - 1);
+  Token get _previous => tokens.elementAt(current - 1);
 
 // Checks to see if the current token has any of the given types. If so, it
 // consumes the token and returns true . Otherwise, it returns false and leaves
 // the current token alone.
   bool match(List<TokenType> types) {
     for (TokenType type in types) {
-      if (check(type)) {
-        advance();
+      if (_check(type)) {
+        _advance();
         return true;
       }
     }
@@ -326,40 +331,41 @@ class Parser {
   }
 
 // Check() method returns true if the current token is of the given type.
-  bool check(TokenType type) {
-    if (isAtEnd) return false;
-    return peek.type == type;
+  bool _check(TokenType type) {
+    if (_isAtEnd) return false;
+    return _peek.type == type;
   }
 
 // The advance() method consumes the current token and returns it, similar to
 // how the scanner consumes.
-  Token advance() {
-    if (!isAtEnd) current++;
-    return previous;
+  Token _advance() {
+    if (!_isAtEnd) current++;
+    return _previous;
   }
 
 // Checks if we’ve run out of tokens to parse.
-  bool get isAtEnd => peek.type == TokenType.eof;
+  bool get _isAtEnd => _peek.type == TokenType.eof;
 
 // peek() returns the current token we have yet to consume.
-  Token get peek => tokens.elementAt(current);
+  Token get _peek => tokens.elementAt(current);
 
-  Token consume(TokenType type, String message) {
-    if (check(type)) return advance();
-    throw error(peek, message);
+  Token _consume(TokenType type, String message) {
+    if (_check(type)) return _advance();
+    throw _error(_peek, message);
   }
 
-  ParseError error(Token token, String message) {
+  ParseError _error(Token token, String message) {
     LogiErrors.errorToken(token, message);
     return ParseError();
   }
 
-  void synchronize() {
-    advance();
+  void _synchronize() {
+    _advance();
 
-    while (!isAtEnd) {
-      if (previous.type == TokenType.semiColon) return;
+    while (!_isAtEnd) {
+      if (_previous.type == TokenType.semiColon) return;
 
+      // ---- Maybe someday we will add more language features -----
       // switch (peek().type) {
       //   case CLASS:
       //   case FUN:
@@ -374,7 +380,7 @@ class Parser {
       //     return;
       // }
 
-      advance();
+      _advance();
     }
   }
 }

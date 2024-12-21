@@ -1,5 +1,4 @@
-import 'package:logilang/logilang/environment.dart';
-
+import 'environment.dart';
 import 'scanner.dart';
 import 'token.dart';
 import 'interpreter.dart';
@@ -7,20 +6,31 @@ import 'parser.dart';
 import 'stmt.dart';
 
 class LogiLang {
-  late Environment env;
-  late Interpreter interpreter;
+  late Environment _env;
+  late Interpreter _interpreter;
 
   LogiLang();
 
   factory LogiLang.create() {
     LogiLang ll = LogiLang();
-    ll.env = Environment();
-    ll.interpreter = Interpreter.create(ll.env);
+    ll._env = Environment();
+    ll._interpreter = Interpreter.create(ll._env);
     return ll;
   }
 
+  /// Deletes global variables.
+  void clear() {
+    _env.clear();
+  }
+
+  /// Manifest variables instead of using 'var' keyword.
   void define(String name, Object? value) {
-    env.define(name, value);
+    _env.define(name, value);
+  }
+
+  /// Returns variable specified by [name] otherwise null.
+  Object? access(String name) {
+    return _env.accessByLexeme(name);
   }
 
   void interpret(String source) {
@@ -33,6 +43,6 @@ class LogiLang {
 
     if (statements.isEmpty) return;
 
-    interpreter.interpret(statements);
+    _interpreter.interpret(statements);
   }
 }

@@ -1,12 +1,12 @@
-import '/logilang/logi_errors.dart';
-import '/logilang/token.dart';
-import '/logilang/token_type.dart';
+import 'logi_errors.dart';
+import 'token.dart';
+import 'token_type.dart';
 
 class Scanner {
-  late String source;
-  final List<Token> tokens = [];
+  late String _source;
+  final List<Token> _tokens = [];
 
-  final Map<String, TokenType> keywords = {
+  final Map<String, TokenType> _keywords = {
     // --- Primitives ----
     'nil': TokenType.nil,
     'false': TokenType.bFalse,
@@ -17,83 +17,83 @@ class Scanner {
   };
 
   // The start and current fields are offsets that index into the string.
-  int start = 0;
-  int current = 0;
+  int _start = 0;
+  int _current = 0;
   // The line field tracks what source line *current* is on
   int line = 1;
 
   Scanner();
 
   factory Scanner.create(String source) {
-    Scanner s = Scanner()..source = source;
+    Scanner s = Scanner().._source = source;
     return s;
   }
 
   void reset() {
-    source = '';
+    _source = '';
     line = 1;
-    start = 0;
-    current = 0;
-    tokens.clear();
+    _start = 0;
+    _current = 0;
+    _tokens.clear();
   }
 
   List<Token> scanTokens() {
-    while (!isAtEnd) {
+    while (!_isAtEnd) {
       // We are at the beginning of the next lexeme.
-      start = current;
-      scanToken();
+      _start = _current;
+      _scanToken();
     }
 
     // Finally append EOF for completeness.
-    tokens.add(Token.create(TokenType.eof, '', Null, line));
+    _tokens.add(Token.create(TokenType.eof, '', Null, line));
 
-    return tokens;
+    return _tokens;
   }
 
-  bool get isAtEnd => current >= source.length;
+  bool get _isAtEnd => _current >= _source.length;
 
-  void scanToken() {
-    String c = advance();
+  void _scanToken() {
+    String c = _advance();
     switch (c) {
       case '(':
-        addToken(TokenType.leftParen);
+        _addToken(TokenType.leftParen);
         break;
       case ')':
-        addToken(TokenType.rightParen);
+        _addToken(TokenType.rightParen);
         break;
       case '-':
-        addToken(TokenType.minus);
+        _addToken(TokenType.minus);
         break;
       case '+':
-        addToken(TokenType.plus);
+        _addToken(TokenType.plus);
         break;
       case ';':
-        addToken(TokenType.semiColon);
+        _addToken(TokenType.semiColon);
         break;
       case '=':
-        addToken(match('=') ? TokenType.equalEqual : TokenType.equal);
+        _addToken(match('=') ? TokenType.equalEqual : TokenType.equal);
         break;
       case '<':
-        addToken(match('=') ? TokenType.lessEqual : TokenType.less);
+        _addToken(match('=') ? TokenType.lessEqual : TokenType.less);
         break;
       case '>':
-        addToken(match('=') ? TokenType.greaterEqual : TokenType.greater);
+        _addToken(match('=') ? TokenType.greaterEqual : TokenType.greater);
         break;
       case '&':
-        addToken(match('&') ? TokenType.and : TokenType.bitAnd);
+        _addToken(match('&') ? TokenType.and : TokenType.bitAnd);
         break;
       case '|':
-        addToken(match('|') ? TokenType.or : TokenType.bitOr);
+        _addToken(match('|') ? TokenType.or : TokenType.bitOr);
         break;
       case '/':
         // '/' needs additional handling
         if (match('/')) {
           // A comment goes until the end of the line.
-          while (peek() != '\n' && !isAtEnd) {
-            advance();
+          while (_peek() != '\n' && !_isAtEnd) {
+            _advance();
           }
         } else {
-          addToken(TokenType.slash);
+          _addToken(TokenType.slash);
         }
         break;
       // --------- White space characters -----------------------
@@ -117,16 +117,16 @@ class Scanner {
         // --------------- Number literals --------------------------
         // It’s kind of tedious to add cases for every decimal digit, so we’ll
         // stuff it in the default case instead.
-        if (isDigit(c)) {
-          number();
-        } else if (isAlpha(c)) {
+        if (_isDigit(c)) {
+          _number();
+        } else if (_isAlpha(c)) {
           // ------------------ Reserved word ---------------------------------
           // Maximal-munch means we can’t easily detect a reserved word until
           // we’ve reached the end of what might instead be an identifier.
           // After all, a reserved word is an identifier, it’s just one that has
           // been claimed by the language for its own use. That’s where the term
           // reserved word comes from.
-          identifier();
+          _identifier();
         } else {
           LogiErrors.error(line, 'Unexpected character: "$c"');
         }
@@ -136,21 +136,21 @@ class Scanner {
 
   /// The *advance* method consumes the next character in the source file and
   /// returns it.
-  String advance() {
-    current++;
-    return source.substring(current - 1, current);
+  String _advance() {
+    _current++;
+    return _source.substring(_current - 1, _current);
   }
 
   /// Grab the text of the current lexeme and creates a new token for it.
-  void addToken(TokenType type) {
-    addTokenLiteral(type, Null);
+  void _addToken(TokenType type) {
+    _addTokenLiteral(type, Null);
   }
 
   /// Grab the text of the current lexeme and creates a new token for it with
   /// provide [literal].
-  void addTokenLiteral(TokenType type, Object literal) {
-    String text = source.substring(start, current);
-    tokens.add(Token.create(type, text, literal, line));
+  void _addTokenLiteral(TokenType type, Object literal) {
+    String text = _source.substring(_start, _current);
+    _tokens.add(Token.create(type, text, literal, line));
   }
 
   /// It’s like a conditional advance.
@@ -159,85 +159,85 @@ class Scanner {
   /// lexeme starts with **!** . Then we look at the next character to
   /// determine if we’re on a **!=** or merely a **!** .
   bool match(String expected) {
-    if (isAtEnd) return false;
-    if (source.substring(current, current + 1) != expected) return false;
-    current++;
+    if (_isAtEnd) return false;
+    if (_source.substring(_current, _current + 1) != expected) return false;
+    _current++;
     return true;
   }
 
-  void identifier() {
-    while (isAlphaNumeric(peek())) {
-      advance();
+  void _identifier() {
+    while (_isAlphaNumeric(_peek())) {
+      _advance();
     }
 
-    String text = source.substring(start, current);
-    TokenType? type = keywords[text];
+    String text = _source.substring(_start, _current);
+    TokenType? type = _keywords[text];
 
     type ??= TokenType.identifier;
 
-    addToken(type);
+    _addToken(type);
   }
 
-  bool isAlpha(String c) {
+  bool _isAlpha(String c) {
     int code = c.codeUnitAt(0);
 
     return (code >= 65 && code <= 90) || (code >= 97 && code <= 122);
   }
 
-  bool isAlphaNumeric(String? c) {
-    return c == null ? false : isAlpha(c) || isDigit(c);
+  bool _isAlphaNumeric(String? c) {
+    return c == null ? false : _isAlpha(c) || _isDigit(c);
   }
 
-  void number() {
-    while (isDigit(peek())) {
-      advance();
+  void _number() {
+    while (_isDigit(_peek())) {
+      _advance();
     }
 
     // Look for a fractional part.
-    if (peek() == '.' && isDigit(peekNext())) {
+    if (_peek() == '.' && _isDigit(_peekNext())) {
       // Consume the "."
-      advance();
-      while (isDigit(peek())) {
-        advance();
+      _advance();
+      while (_isDigit(_peek())) {
+        _advance();
       }
     }
 
-    addTokenLiteral(
-        TokenType.number, double.parse(source.substring(start, current)));
+    _addTokenLiteral(
+        TokenType.number, double.parse(_source.substring(_start, _current)));
   }
 
   void _string() {
-    while (peek() != '"' && !isAtEnd) {
-      if (peek() == '\n') line++;
-      advance();
+    while (_peek() != '"' && !_isAtEnd) {
+      if (_peek() == '\n') line++;
+      _advance();
     }
 
-    if (isAtEnd) {
+    if (_isAtEnd) {
       LogiErrors.error(line, "Unterminated string.");
       return;
     }
 
     // The closing quote.
-    advance();
+    _advance();
 
     // Trim the surrounding quotes.
-    String value = source.substring(start + 1, current - 1);
-    addTokenLiteral(TokenType.string, value);
+    String value = _source.substring(_start + 1, _current - 1);
+    _addTokenLiteral(TokenType.string, value);
   }
 
-  bool isDigit(String? c) {
+  bool _isDigit(String? c) {
     if (c == null) return false;
     double? d = double.tryParse(c);
     return d == null ? false : d >= 0 && d <= 9;
   }
 
-  String? peek() {
-    if (isAtEnd) return null;
-    return source.substring(current, current + 1);
+  String? _peek() {
+    if (_isAtEnd) return null;
+    return _source.substring(_current, _current + 1);
   }
 
-  String? peekNext() {
-    if (current + 1 >= source.length) return null;
-    return source.substring(current + 1, current + 2);
+  String? _peekNext() {
+    if (_current + 1 >= _source.length) return null;
+    return _source.substring(_current + 1, _current + 2);
   }
 }
