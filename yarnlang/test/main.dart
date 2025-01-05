@@ -270,5 +270,12 @@ var badge = 9;
           isTrue,
           reason: 'Expected parse exception message.');
     });
+
+    test('Undefined variable', () {
+      logi.interpret('c = c + wacko;');
+      String e = logi.lastError;
+      expect(e == 'Undefined variable "wacko".', isTrue,
+          reason: 'Expected interpreter exception message.');
+    });
   });
 }
